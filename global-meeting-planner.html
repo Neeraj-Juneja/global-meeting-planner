@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Meeting Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #111827;
+  --surface: #0A2540;
+  --surface2: #1E3A8A;
+  --border: rgba(255,255,255,0.1);
+  --ink: #FFFFFF;
+  --ink2: #9CA3AF;
+  --accent: #1E3A8A;
+  --accent2: #F59E0B;
+  --green: #16A34A;
+  --green-bg: rgba(22,163,74,0.15);
+  --yellow: #F59E0B;
+  --yellow-bg: rgba(245,158,11,0.15);
+  --red: #DC2626;
+  --red-bg: rgba(220,38,38,0.15);
+  --shadow: 0 2px 24px rgba(0,0,0,0.4);
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  padding: 0 0 5rem;
+}
+
+/* ── Top bar ── */
+.topbar {
+  background: #0A2540;
+  color: #FFFFFF;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+
+.topbar-title span { color: var(--accent2); font-style: italic; }
+
+.topbar-meta {
+  font-size: 0.78rem;
+  color: #9CA3AF;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+/* ── Page layout ── */
+.page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Setup banner ── */
+.setup-banner {
+  background: rgba(245,158,11,0.1);
+  border: 1.5px dashed var(--accent2);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.82rem;
+  color: #F59E0B;
+  line-height: 1.6;
+}
+
+.setup-banner strong { font-weight: 600; }
+
+.setup-banner code {
+  background: rgba(245,158,11,0.2);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+/* ── Section titles ── */
+.section-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+/* ── Form fields ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink2);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.field input, .field select {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+}
+
+/* ── Grid ── */
+.grid-wrap { overflow-x: auto; }
+
+.avail-grid {
+  display: grid;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 560px;
+  user-select: none;
+}
+
+.grid-header {
+  display: grid;
+  grid-template-columns: 64px repeat(3, 1fr);
+  background: #0A2540;
+}
+
+.grid-header-cell {
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.grid-header-cell:first-child { border-left: none; }
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 64px repeat(3, 1fr);
+  border-top: 1px solid var(--border);
+}
+
+.grid-row:first-of-type { border-top: none; }
+
+.grid-time {
+  padding: 0 0.5rem;
+  font-size: 0.68rem;
+  color: var(--ink2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: var(--surface2);
+  font-weight: 500;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.grid-cell {
+  height: 36px;
+  border-left: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.07s;
+  position: relative;
+}
+
+.grid-cell:hover { background: rgba(245,158,11,0.1); }
+.grid-cell.selected { background: var(--accent) !important; }
+.grid-cell.selected::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.15);
+}
+
+/* ── Submit button ── */
+.btn-submit {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.03em;
+  margin-top: 0.5rem;
+}
+
+.btn-submit:hover { opacity: 0.87; transform: translateY(-1px); }
+.btn-submit:active { transform: translateY(0); }
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Status message ── */
+.status {
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 0.6rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
+  display: none;
+}
+
+.status.ok  { background: var(--green-bg); color: var(--green); display: block; }
+.status.err { background: var(--red-bg);   color: var(--red);   display: block; }
+
+/* ── Results ── */
+.results-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.btn-refresh {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-copy {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--accent2);
+  background: transparent;
+  color: var(--yellow);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-copy:hover { background: var(--yellow-bg); }
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.75rem;
+  color: var(--ink2);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item { display: flex; align-items: center; gap: 0.4rem; }
+
+.legend-swatch {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Results grid ── */
+.results-grid { overflow-x: auto; }
+
+.res-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  min-width: 560px;
+}
+
+.res-table thead tr { background: #0A2540; }
+
+.res-table th {
+  padding: 0.55rem 0.75rem;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.res-table td {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.res-table tr:last-child td { border-bottom: none; }
+.res-table tr:hover td { background: rgba(245,158,11,0.04); }
+
+.slot-label { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.slot-day   { font-size: 0.68rem; color: var(--ink2); }
+
+.avail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+}
+
+.avail-pill.green  { background: var(--green-bg);  color: var(--green); }
+.avail-pill.yellow { background: var(--yellow-bg); color: var(--yellow); }
+.avail-pill.red    { background: var(--red-bg);    color: var(--red); }
+
+.attendees-list {
+  font-size: 0.72rem;
+  color: var(--ink2);
+  line-height: 1.4;
+}
+
+.rank-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+}
+
+.rank-badge.best   { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(22,163,74,0.4); }
+.rank-badge.good   { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(245,158,11,0.4); }
+.rank-badge.low    { background: var(--red-bg);    color: var(--red);    border: 1px solid rgba(220,38,38,0.4); }
+
+.no-data {
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--ink2);
+  font-size: 0.88rem;
+}
+
+/* ── Participants panel ── */
+.participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.participant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.participant-chip .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card { animation: fadeUp 0.35s ease both; }
+.card:nth-child(2) { animation-delay: 0.05s; }
+.card:nth-child(3) { animation-delay: 0.1s; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .topbar { padding: 1rem; }
+  .page { padding: 1.25rem 1rem; }
+}
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── Upcoming Weekend hero ── */
+.weekend-hero {
+  background: #0A2540;
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.weekend-hero-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.weekend-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-style: italic;
+  color: #F59E0B;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.weekend-hero-dates {
+  margin-top: 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #9CA3AF;
+  letter-spacing: 0.06em;
+  min-height: 1.5em;
+  transition: color 0.2s;
+}
+
+.weekend-hero-dates.has-dates { color: #F59E0B; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">🌐 NJ's Global <span>Meeting Planner</span></div>
+  <div class="topbar-meta">Created by Neeraj Juneja</div>
+</div>
+
+<div class="weekend-hero">
+  <div class="weekend-hero-label">Upcoming Weekend</div>
+  <div class="weekend-hero-title">When are you free?</div>
+  <div class="weekend-hero-dates" id="hero-dates">Select your timezone to see your local weekend dates</div>
+</div>
+
+<div class="page">
+
+  <!-- Setup banner -->
+  <div class="setup-banner" id="setup-banner">
+    ⚙️ <strong>One-time setup needed:</strong> Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> in this file with your Google Apps Script Web App URL.
+    See the <strong>Setup Instructions</strong> document included with this file.
+    Once done, this banner disappears automatically.
+  </div>
+
+  <!-- Step 1: Your info -->
+  <div class="section-eyebrow">Step 1</div>
+  <div class="section-title">Enter Your name</div>
+
+  <div class="card">
+    <div class="form-row">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="guest-name" placeholder="e.g. Priya Sharma" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Your Timezone</label>
+        <select id="guest-tz">
+          <option value="">— Select your timezone —</option>
+          <optgroup label="🇺🇸 United States">
+            <option value="America/Los_Angeles">Pacific Time (PT) — Los Angeles</option>
+            <option value="America/Denver">Mountain Time (MT) — Denver</option>
+            <option value="America/Chicago">Central Time (CT) — Chicago</option>
+            <option value="America/New_York">Eastern Time (ET) — New York</option>
+            <option value="Pacific/Honolulu">Hawaii (HT) — Honolulu</option>
+          </optgroup>
+          <optgroup label="🇮🇳 India">
+            <option value="Asia/Kolkata">India Standard Time (IST) — Mumbai/Delhi</option>
+          </optgroup>
+          <optgroup label="🇸🇬 Singapore">
+            <option value="Asia/Singapore">Singapore Time (SGT)</option>
+          </optgroup>
+          <optgroup label="🇳🇿 New Zealand">
+            <option value="Pacific/Auckland">New Zealand Time (NZST)</option>
+          </optgroup>
+          <optgroup label="🇦🇺 Australia">
+            <option value="Australia/Sydney">AEST — Sydney/Melbourne</option>
+            <option value="Australia/Perth">AWST — Perth</option>
+          </optgroup>
+          <optgroup label="🇬🇧 / 🇪🇺 Europe">
+            <option value="Europe/London">GMT/BST — London</option>
+            <option value="Europe/Berlin">CET/CEST — Berlin/Paris/Rome</option>
+            <option value="Europe/Moscow">MSK — Moscow</option>
+          </optgroup>
+          <optgroup label="🇦🇪 Middle East">
+            <option value="Asia/Dubai">GST — Dubai/UAE</option>
+            <option value="Asia/Riyadh">AST — Riyadh</option>
+          </optgroup>
+          <optgroup label="🇯🇵 🇨🇳 Asia-Pacific">
+            <option value="Asia/Tokyo">JST — Tokyo</option>
+            <option value="Asia/Shanghai">CST — Beijing/Shanghai</option>
+            <option value="Asia/Hong_Kong">HKT — Hong Kong</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Availability grid -->
+  <div class="section-eyebrow">Step 2</div>
+  <div class="section-title">When are you free?</div>
+
+  <div class="card">
+    <p style="font-size:0.82rem;color:var(--ink2);margin-bottom:1rem;">
+      Click or drag to highlight hours you're <strong>available</strong>.
+    </p>
+
+    <div class="grid-wrap">
+      <div class="avail-grid" id="avail-grid">
+        <div class="grid-header">
+          <div class="grid-header-cell" style="background:transparent;border-left:none;"></div>
+          <div class="grid-header-cell" id="col-fri">Friday</div>
+          <div class="grid-header-cell" id="col-sat">Saturday</div>
+          <div class="grid-header-cell" id="col-sun">Sunday</div>
+        </div>
+        <!-- rows injected by JS -->
+      </div>
+    </div>
+
+    <p style="font-size:0.72rem;color:var(--ink2);margin-top:0.75rem;">
+      💡 Tip: Click and drag across multiple cells to select a range quickly.
+    </p>
+  </div>
+
+  <!-- Submit -->
+  <button class="btn-submit" id="submit-btn" onclick="submitAvailability()">
+    Submit My Availability →
+  </button>
+  <div class="status" id="status-msg"></div>
+
+  <hr>
+
+  <!-- Results -->
+  <div class="section-eyebrow">Results</div>
+  <div class="section-title">Best Times for Everyone</div>
+
+  <div class="card">
+    <div class="results-controls">
+      <div>
+        <div style="font-size:0.8rem;color:var(--ink2);margin-bottom:0.5rem;">
+          <strong id="participant-count">—</strong> participants so far:
+        </div>
+        <div class="participants" id="participants-list">
+          <span style="font-size:0.78rem;color:var(--ink2);">Loading…</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn-refresh" onclick="loadResults()">↻ Refresh</button>
+        <button class="btn-copy" onclick="copyBestTimes()">Copy Best Times</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--green-bg);border:1.5px solid var(--green);"></div> Everyone available</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--yellow-bg);border:1.5px solid var(--accent2);"></div> Most people available</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--red-bg);border:1.5px solid var(--red);"></div> Few / none available</div>
+    </div>
+
+    <div class="results-grid">
+      <table class="res-table" id="results-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Day</th>
+            <th>Time Slot (UTC)</th>
+            <th>Available</th>
+            <th>Who's Free</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+          <tr><td colspan="5" class="no-data">Loading results…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  CONFIG — replace with your Apps Script Web App URL
+// ════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3yhYL2QNTOYSrOGCYWXut5Zx-OuMblrQsTU7BVbQPlIK-OV9AQ1U5z_lalJr4Mdtc/exec';
+
+// ── Hours 0-23 (local hours shown to user) ────────────
+const HOURS = Array.from({length: 24}, (_, i) => i);
+
+// ── Compute upcoming Fri/Sat/Sun in user's local TZ ───
+function getLocalWeekend(tz) {
+  const now = new Date();
+  const todayDow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short' }).format(now)
+  );
+  // Days until next Friday (0 if today is Friday)
+  const daysToFri = (5 - todayDow + 7) % 7;
+  const result = [];
+  const dayNames  = ['Friday','Saturday','Sunday'];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + daysToFri + i);
+    // Get the local date string in the target TZ
+    const localISO = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(d);
+    const dateLabel = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, month: 'short', day: 'numeric'
+    }).format(d);
+    result.push({ iso: localISO, dayName: dayNames[i], dateLabel });
+  }
+  return result;
+}
+
+// ── State ──────────────────────────────────────────────
+let currentTZShort = '';
+let currentDates   = []; // [{iso, dayName, dateLabel}]
+
+// ── Hide setup banner if URL is configured ─────────────
+if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+  document.getElementById('setup-banner').style.display = 'none';
+}
+
+// ── Build the availability grid ────────────────────────
+let isDragging = false;
+let dragValue  = true;
+const selected = {};
+
+function buildGrid() {
+  const grid = document.getElementById('avail-grid');
+  grid.querySelectorAll('.grid-row').forEach(r => r.remove());
+
+  // Update column headers with local day + date
+  const colIds = ['col-fri','col-sat','col-sun'];
+  const dayFallbacks = ['Friday','Saturday','Sunday'];
+  colIds.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (currentDates.length) {
+      el.innerHTML = `${currentDates[i].dayName}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7;">${currentDates[i].dateLabel}</span>`;
+    } else {
+      el.textContent = dayFallbacks[i];
+    }
+  });
+
+  const dates = currentDates.length ? currentDates : [
+    { iso: 'fri' }, { iso: 'sat' }, { iso: 'sun' }
+  ];
+
+  HOURS.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'grid-row';
+
+    const timeCell = document.createElement('div');
+    timeCell.className = 'grid-time';
+    timeCell.textContent = formatHour(h);
+    row.appendChild(timeCell);
+
+    dates.forEach(d => {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      const key = `${d.iso}|${h}`;
+      cell.dataset.key = key;
+      if (selected[key]) cell.classList.add('selected');
+
+      cell.addEventListener('mousedown', e => {
+        e.preventDefault();
+        isDragging = true;
+        dragValue = !selected[key];
+        toggleCell(cell, key, dragValue);
+      });
+      cell.addEventListener('mouseenter', () => {
+        if (isDragging) toggleCell(cell, key, dragValue);
+      });
+      cell.addEventListener('touchstart', e => {
+        e.preventDefault();
+        isDragging = true;
+        dragValue = !selected[key];
+        toggleCell(cell, key, dragValue);
+      }, { passive: false });
+      cell.addEventListener('touchmove', e => {
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (el && el.classList.contains('grid-cell')) {
+          toggleCell(el, el.dataset.key, dragValue);
+        }
+      });
+
+      row.appendChild(cell);
+    });
+
+    grid.appendChild(row);
+  });
+
+  document.addEventListener('mouseup', () => isDragging = false);
+  document.addEventListener('touchend', () => isDragging = false);
+}
+
+function toggleCell(cell, key, val) {
+  selected[key] = val;
+  cell.classList.toggle('selected', val);
+}
+
+function formatHour(h) {
+  const ampm = h < 12 ? 'am' : 'pm';
+  const h12  = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const suffix = currentTZShort ? ` ${currentTZShort}` : '';
+  return `${h12}${ampm}${suffix}`;
+}
+
+// ── Reliable TZ abbreviation (never GMT+xx) ────────────
+function getTZAbbr(tz) {
+  const now = new Date();
+  // Strategy 1: 'short' — works for PDT, IST, SGT, NZST etc.
+  const short = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+    .formatToParts(now).find(p => p.type === 'timeZoneName')?.value || '';
+  if (short && !/^(GMT|UTC)[+-]/.test(short)) return short;
+
+  // Strategy 2: 'shortGeneric' — better for AU/NZ/Asia zones
+  try {
+    const generic = new Intl.DateTimeFormat('en-AU', { timeZone: tz, timeZoneName: 'short' })
+      .formatToParts(now).find(p => p.type === 'timeZoneName')?.value || '';
+    if (generic && !/^(GMT|UTC)[+-]/.test(generic)) return generic;
+  } catch {}
+
+  // Strategy 3: Manual map for zones that stubbornly return GMT+xx
+  const manualMap = {
+    'Australia/Sydney':    'AEST',
+    'Australia/Melbourne': 'AEST',
+    'Australia/Perth':     'AWST',
+    'Australia/Brisbane':  'AEST',
+    'Pacific/Auckland':    'NZST',
+    'Asia/Kolkata':        'IST',
+    'Asia/Singapore':      'SGT',
+    'Asia/Tokyo':          'JST',
+    'Asia/Shanghai':       'CST',
+    'Asia/Hong_Kong':      'HKT',
+    'Asia/Dubai':          'GST',
+    'Asia/Riyadh':         'AST',
+    'Europe/Moscow':       'MSK',
+    'Pacific/Honolulu':    'HST',
+  };
+  return manualMap[tz] || '';
+}
+
+// ── Update everything when TZ changes ─────────────────
+document.getElementById('guest-tz').addEventListener('change', onTZChange);
+
+function onTZChange() {
+  const tz = document.getElementById('guest-tz').value;
+  if (!tz) return;
+
+  currentTZShort = getTZAbbr(tz);
+  currentDates = getLocalWeekend(tz);
+
+  // Update hero dates line
+  const heroDates = document.getElementById('hero-dates');
+  heroDates.textContent = `${currentDates[0].dateLabel} · ${currentDates[1].dateLabel} · ${currentDates[2].dateLabel}  (${currentTZShort})`;
+  heroDates.classList.add('has-dates');
+
+  // Clear selections when TZ changes (dates shift)
+  Object.keys(selected).forEach(k => delete selected[k]);
+
+  buildGrid();
+}
+
+// ── Submit availability ───────────────────────────────
+async function submitAvailability() {
+  const name = document.getElementById('guest-name').value.trim();
+  const tz   = document.getElementById('guest-tz').value;
+
+  if (!name) { showStatus('Please enter your name.', 'err'); return; }
+  if (!tz)   { showStatus('Please select your timezone.', 'err'); return; }
+
+  const slots = Object.entries(selected)
+    .filter(([,v]) => v)
+    .map(([k]) => k); // "YYYY-MM-DD|H"
+
+  if (slots.length === 0) {
+    showStatus('Please select at least one available time slot.', 'err');
+    return;
+  }
+
+  if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showStatus('⚙️ Apps Script URL not configured yet. See setup instructions.', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const payload = { name, tz, slots };
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    showStatus(`✅ Thanks, ${name}! Your availability has been saved. Scroll down to see results.`, 'ok');
+    setTimeout(loadResults, 1000);
+  } catch (e) {
+    showStatus('❌ Could not save — check your Apps Script URL and try again.', 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit My Availability →';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = `status ${type}`;
+}
+
+// ── Load & render results ─────────────────────────────
+let allResponses = [];
+
+async function loadResults() {
+  const tbody = document.getElementById('results-body');
+
+  if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-data">⚙️ Configure your Apps Script URL to see live results.</td></tr>`;
+    document.getElementById('participants-list').innerHTML =
+      `<span style="font-size:0.78rem;color:var(--ink2);">Not connected yet.</span>`;
+    return;
+  }
+
+  tbody.innerHTML = `<tr><td colspan="5" class="no-data">Loading…</td></tr>`;
+
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=get`);
+    const data = await res.json();
+    allResponses = data.responses || [];
+    renderResults(allResponses);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-data">⚠️ Could not load results. Try refreshing.</td></tr>`;
+  }
+}
+
+function renderResults(responses) {
+  const tbody  = document.getElementById('results-body');
+  const pList  = document.getElementById('participants-list');
+  const pCount = document.getElementById('participant-count');
+
+  // Unique participants
+  const participants = [...new Map(responses.map(r => [r.name, r])).values()];
+  pCount.textContent = participants.length;
+
+  const colors = ['#2d6a4f','#c07d10','#2563eb','#9333ea','#db2777','#0891b2','#059669','#d97706'];
+  pList.innerHTML = participants.map((p, i) => `
+    <div class="participant-chip">
+      <div class="dot" style="background:${colors[i % colors.length]}"></div>
+      ${escHtml(p.name)}
+      <span style="font-size:0.65rem;color:var(--ink2);">(${tzShort(p.tz)})</span>
+    </div>`).join('');
+
+  if (participants.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-data">No responses yet — be the first to submit!</td></tr>`;
+    return;
+  }
+
+  // Tally slots
+  const tally = {}; // key → Set of names
+  responses.forEach(r => {
+    (r.slots || []).forEach(slot => {
+      if (!tally[slot]) tally[slot] = new Set();
+      tally[slot].add(r.name);
+    });
+  });
+
+  const total = participants.length;
+  const rows  = Object.entries(tally)
+    .map(([key, names]) => ({ key, names, count: names.size }))
+    .sort((a, b) => b.count - a.count);
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-data">No availability submitted yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row, idx) => {
+    const [dateIso, localH] = row.key.split('|');
+    const dateLabel = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      .format(new Date(dateIso + 'T12:00:00'));
+    const pct  = row.count / total;
+    const tier = pct === 1 ? 'green' : pct >= 0.5 ? 'yellow' : 'red';
+    const tierLabel = pct === 1 ? 'Everyone' : pct >= 0.5 ? 'Most' : 'Few';
+    const rankLabel = idx === 0 ? 'best' : idx < 3 ? 'good' : 'low';
+    const rankText  = idx === 0 ? '🥇 Best' : idx < 3 ? 'Good' : '—';
+
+    return `<tr style="background:${tier==='green'?'rgba(22,163,74,0.07)':tier==='yellow'?'rgba(245,158,11,0.07)':'rgba(220,38,38,0.05)'}">
+      <td><span class="rank-badge ${rankLabel}">${rankText}</span></td>
+      <td><span class="slot-day">${dateLabel}</span></td>
+      <td><span class="slot-label">${formatHour(parseInt(localH))} – ${formatHour((parseInt(localH)+1)%24)}</span></td>
+      <td><span class="avail-pill ${tier}">${row.count}/${total} — ${tierLabel}</span></td>
+      <td><div class="attendees-list">${[...row.names].map(escHtml).join(', ')}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function tzShort(tz) {
+  if (!tz) return '?';
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+      .formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value || tz.split('/')[1];
+  } catch { return tz.split('/').pop(); }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Copy best times summary ───────────────────────────
+function copyBestTimes() {
+  if (!allResponses.length) { alert('No data to copy yet.'); return; }
+
+  const participants = [...new Map(allResponses.map(r => [r.name, r])).values()];
+  const total = participants.length;
+  const tally = {};
+  allResponses.forEach(r => {
+    (r.slots || []).forEach(slot => {
+      if (!tally[slot]) tally[slot] = new Set();
+      tally[slot].add(r.name);
+    });
+  });
+
+  const sorted = Object.entries(tally)
+    .map(([key, names]) => ({ key, names, count: names.size }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  let text = `🌐 Global Virtual Meeting Planner\n`;
+  text += `Upcoming Weekend | ${total} participant(s)\n`;
+  text += `Participants: ${participants.map(p => p.name).join(', ')}\n\n`;
+  text += `🏆 TOP TIME SLOTS:\n\n`;
+
+  sorted.forEach((row, i) => {
+    const [dateIso, localH] = row.key.split('|');
+    const dateLabel = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      .format(new Date(dateIso + 'T12:00:00'));
+    const icon = i === 0 ? '🥇' : row.count === total ? '✅' : row.count >= total/2 ? '🟡' : '🔴';
+    text += `${icon} ${dateLabel} — ${formatHour(parseInt(localH))}\n`;
+    text += `   Available (${row.count}/${total}): ${[...row.names].join(', ')}\n\n`;
+  });
+
+  text += `✅ All available  🟡 Most available  🔴 Few available`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied! ✓';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => alert('Copy failed — please copy manually.'));
+}
+
+// ── Init ──────────────────────────────────────────────
+buildGrid();
+loadResults();
+</script>
+</body>
+</html>
